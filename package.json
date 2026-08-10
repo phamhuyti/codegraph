@@ -36,6 +36,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "codegraph": {
+    "corporate": true
+  },
   "dependencies": {
     "@clack/prompts": "^1.3.0",
     "commander": "^14.0.2",

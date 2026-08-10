@@ -34,10 +34,22 @@ describe('Telemetry', () => {
       dir,
       fetchImpl: mockFetch(calls),
       now: () => nowValue,
-      env: {},
+      // This company fork sets package.json codegraph.corporate=true; pin
+      // open-source default behavior in unit tests unless a case opts in.
+      env: { CODEGRAPH_CORPORATE: '0' },
       stderr: (line) => stderrLines.push(line),
       installExitHook: false,
       ...overrides,
+      // Merge env so callers can add keys without dropping the corporate override
+      // unless they explicitly set CODEGRAPH_CORPORATE.
+      ...(overrides.env
+        ? {
+            env: {
+              CODEGRAPH_CORPORATE: '0',
+              ...overrides.env,
+            },
+          }
+        : {}),
     });
 
   beforeEach(() => {
@@ -55,6 +67,12 @@ describe('Telemetry', () => {
     it('defaults to enabled when nothing decides otherwise', () => {
       const t = make();
       expect(t.getStatus()).toMatchObject({ enabled: true, decidedBy: 'default', machineId: null });
+    });
+
+    it('corporate mode defaults to disabled with no network consent prompt path', () => {
+      const t = make({ env: { CODEGRAPH_CORPORATE: '1' } });
+      expect(t.getStatus()).toMatchObject({ enabled: false, decidedBy: 'corporate', machineId: null });
+      expect(t.isEnabled()).toBe(false);
     });
 
     it('DO_NOT_TRACK beats everything, including a forced-on env and config', () => {

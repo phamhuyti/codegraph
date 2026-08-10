@@ -26,6 +26,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { randomUUID } from 'crypto';
+import { isCorporateMode } from '../corporate';
 
 export const TELEMETRY_ENDPOINT = 'https://telemetry.getcodegraph.com/v1/events';
 export const TELEMETRY_DOCS = 'https://github.com/colbymchenry/codegraph/blob/main/TELEMETRY.md';
@@ -97,7 +98,7 @@ interface ConfigFile {
 export interface TelemetryStatus {
   enabled: boolean;
   /** What decided the current state — mirrors the precedence order. */
-  decidedBy: 'DO_NOT_TRACK' | 'CODEGRAPH_TELEMETRY' | 'config' | 'default';
+  decidedBy: 'DO_NOT_TRACK' | 'CODEGRAPH_TELEMETRY' | 'config' | 'corporate' | 'default';
   machineId: string | null;
   configPath: string;
 }
@@ -182,7 +183,8 @@ export class Telemetry {
 
   /**
    * Resolution order (first match wins) — keep in sync with TELEMETRY.md:
-   * DO_NOT_TRACK=1 > CODEGRAPH_TELEMETRY=0|1 > stored config > default on.
+   * DO_NOT_TRACK=1 > CODEGRAPH_TELEMETRY=0|1 > stored config >
+   * corporate build (off) > default on.
    */
   getStatus(): TelemetryStatus {
     const config = this.readConfig();
@@ -198,6 +200,10 @@ export class Telemetry {
     }
     if (config) {
       return { enabled: config.enabled, decidedBy: 'config', machineId, configPath: this.configPath };
+    }
+    // Corporate / restricted-network builds never phone home by default.
+    if (isCorporateMode(this.env)) {
+      return { enabled: false, decidedBy: 'corporate', machineId, configPath: this.configPath };
     }
     return { enabled: true, decidedBy: 'default', machineId, configPath: this.configPath };
   }

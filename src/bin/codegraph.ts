@@ -2412,6 +2412,7 @@ program
       DO_NOT_TRACK: 'DO_NOT_TRACK environment variable',
       CODEGRAPH_TELEMETRY: 'CODEGRAPH_TELEMETRY environment variable',
       config: 'your saved choice',
+      corporate: 'corporate / restricted-network build',
       default: 'default',
     };
     console.log(`\nTelemetry: ${s.enabled ? chalk.green('enabled') : chalk.yellow('disabled')} ${chalk.dim(`(${decidedBy[s.decidedBy]})`)}`);

@@ -14,6 +14,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { isCorporateMode } from '../corporate';
 
 /** JSON waitlist endpoint on the landing page (see its /api/waitlist route). */
 export const BETA_SIGNUP_ENDPOINT = 'https://getcodegraph.com/api/waitlist';
@@ -101,6 +102,8 @@ export async function submitBetaSignup(
  * machine. Exported separately so the no-spam rule is unit-testable.
  */
 export function shouldOfferBetaSignup(deps: BetaSignupDeps = {}): boolean {
+  // Corporate / restricted-network builds never contact getcodegraph.com.
+  if (isCorporateMode()) return false;
   const stdinTTY = deps.stdinIsTTY ?? process.stdin.isTTY;
   const stdoutTTY = deps.stdoutIsTTY ?? process.stdout.isTTY;
   if (!stdinTTY || !stdoutTTY) return false;
