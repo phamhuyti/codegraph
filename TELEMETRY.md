@@ -20,9 +20,14 @@ export CODEGRAPH_TELEMETRY=0   # per-shell / per-CI override
 export DO_NOT_TRACK=1          # the cross-tool standard — always honored
 ```
 
+**Corporate / restricted-network builds** (`package.json` → `"codegraph": { "corporate": true }`,
+or `CODEGRAPH_CORPORATE=1`) default telemetry **off** and never open a socket to the
+ingest endpoint unless you explicitly turn it back on. This fork ships that way so
+company machines that can reach npm but must not contact external services stay quiet.
+
 `codegraph telemetry status` shows the current state, what decided it, and your machine ID.
 The interactive installer (`codegraph install`) asks up front with a visible default-on
-toggle and never re-asks. If you never saw the installer (e.g. `npx` straight into `init`),
+toggle and never re-asks (corporate builds skip the question and store “off”). If you never saw the installer (e.g. `npx` straight into `init`),
 a one-line notice is printed to stderr before the first time anything is sent.
 
 Off means off: when disabled, CodeGraph records nothing, opens no connection to the
@@ -32,6 +37,7 @@ Separately from telemetry, the MCP server checks GitHub for a newer release in t
 background (at most once a day) so it can tell you an update exists — it fetches a
 version number and sends nothing about you or your machine. `DO_NOT_TRACK=1` disables
 this check too; to turn off only the update check, use `CODEGRAPH_NO_UPDATE_CHECK=1`.
+Corporate builds disable the update check entirely (upgrade via your npm registry instead).
 
 ## What is collected
 

@@ -31,6 +31,7 @@ import { isGitRepo, isSyncHookInstalled, installGitSyncHook } from '../sync/git-
 import { getCodeGraphDir, codeGraphDirName } from '../directory';
 import { getTelemetry, TELEMETRY_DOCS } from '../telemetry';
 import { maybeOfferBetaSignup } from './beta-signup';
+import { isCorporateMode } from '../corporate';
 
 // Backwards-compat: keep these named exports — downstream code may
 // import them. The shim in `config-writer.ts` continues to re-export
@@ -184,9 +185,14 @@ export async function runInstallerWithOptions(opts: RunInstallerOptions): Promis
 
   // Step 4½: anonymous usage telemetry — a visible default-on toggle, asked
   // exactly once. Skipped when an env var (DO_NOT_TRACK / CODEGRAPH_TELEMETRY)
-  // already decides, or when a previous run stored a choice — re-runs and
-  // upgrades never re-ask.
-  if (!useDefaults && getTelemetry().getStatus().decidedBy === 'default' && !getTelemetry().hasStoredChoice()) {
+  // already decides, when this is a corporate build (never phones home), or
+  // when a previous run stored a choice — re-runs and upgrades never re-ask.
+  if (isCorporateMode()) {
+    if (!getTelemetry().hasStoredChoice()) {
+      getTelemetry().setEnabled(false, 'installer');
+    }
+    clack.log.info('Corporate build — telemetry off (no outbound usage stats).');
+  } else if (!useDefaults && getTelemetry().getStatus().decidedBy === 'default' && !getTelemetry().hasStoredChoice()) {
     const share = await clack.confirm({
       message: 'Share anonymous usage stats? (No code, paths, or names — see TELEMETRY.md)',
       initialValue: true,
